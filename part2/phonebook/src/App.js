@@ -1,31 +1,10 @@
 import { useState, useEffect } from 'react'
 import phonebookService from './services/phonebook'
+import Display from './components/Display'
+import Notification from './components/Notification'
+import './index.css'
 
 const Header = ({ text }) => <h1>{text}</h1>;
-
-const DeleteButton = ({ handler }) => <button onClick={handler}>delete</button>;
-
-const Person = ({ person, handler }) => {
-  return (
-    <div>{person.name} {person.number} <DeleteButton id={person.id} handler={handler}/></div>
-  );
-};
-
-const Display = ({ list, handler }) => {
-  return (
-    <>
-      {list.map(person => {
-        return (
-          <Person
-            key={person.name}
-            person={person}
-            handler={handler(person.id, person.name)}
-          />
-        )
-      })}
-    </>
-  );
-};
 
 const InputField = ({ text, value, handler }) => {
   return (
@@ -41,6 +20,7 @@ const App = () => {
   const [newName, setNewName] = useState('');
   const [newNumber, setNewNumber] = useState('');
   const [query, setQuery] = useState('');
+  const [message, setMessage] = useState(null);
 
   useEffect(() => {
     phonebookService
@@ -54,6 +34,11 @@ const App = () => {
         );
       });
   }, []);
+
+  const displayMessage = (message) => {
+    setMessage(message);
+    setTimeout(() => setMessage(null), 5000);
+  };
 
   const addName = (event) => {
     event.preventDefault();
@@ -78,6 +63,7 @@ const App = () => {
         setAllNames(allNamesUpdated);
         setNewName('');
         setNewNumber('');
+        displayMessage(`${newName} was added to the phonebook.`);
       });
   };
 
@@ -95,6 +81,7 @@ const App = () => {
         setPersons(persons.map(p => p.id !== id ? p : response.data));
         setNewName('');
         setNewNumber('');
+        displayMessage(`${newName}'s number was updated.`);
       });
   };
 
@@ -112,7 +99,7 @@ const App = () => {
 
   const handleDelete = (id, name) => {
     return () => {
-      if (window.confirm(`Delete ${name}?`)) {
+      if (window.confirm(`Delete ${name} from the phonebook?`)) {
         phonebookService.deleteById(id)
           .then(response => {
             setPersons(persons.filter(p => p.id !== id));
@@ -120,6 +107,7 @@ const App = () => {
             const allNamesUpdated = { ...allNames };
             delete allNamesUpdated[name];
             setAllNames(allNamesUpdated);
+            setMessage(`${name} was deleted from the phonebook.`);
           });
       }
     };
@@ -128,6 +116,7 @@ const App = () => {
   return (
     <div>
       <Header text='Phonebook' />
+      <Notification message={message} />
       <InputField 
         text='filter shown with' 
         value={query} 
