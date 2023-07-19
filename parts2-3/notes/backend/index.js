@@ -1,6 +1,22 @@
 const express = require('express');
 const app = express();
 const cors = require('cors');
+const mongoose = require('mongoose');
+
+const PW = 'B13Gj2xtx1rR5JCK';
+
+const url = `mongodb+srv://fullstack:${PW}@cluster0.vtux1bo.mongodb.net/noteApp?retryWrites=true&w=majority`;
+
+mongoose.set('strictQuery', false);
+mongoose.connect(url);
+
+const noteSchema = new mongoose.Schema({
+  content: String,
+  important: Boolean,
+});
+
+const Note = mongoose.model('Note', noteSchema);
+
 
 const requestLogger = (request, response, next) => {
   console.log('Method: ', request.method);
@@ -42,7 +58,9 @@ app.get('/', (request, response) => {
 });
 
 app.get('/api/notes', (request, response) => {
-  response.json(notes);
+  Note.find({}).then(notes => {
+    response.json(notes);
+  });
 });
 
 app.get('/api/notes/:id', (request, response) => {
